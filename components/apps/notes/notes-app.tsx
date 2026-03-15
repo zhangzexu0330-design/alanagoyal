@@ -217,7 +217,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
                     overlay.style.pointerEvents = 'none';
                     const elementBelow = document.elementFromPoint(upEvent.clientX, upEvent.clientY);
                     overlay.style.pointerEvents = '';
-                    if (elementBelow && elementBelow !== overlay) {
+                    if (elementBelow && elementBelow !== overlay && typeof (elementBelow as HTMLElement).click === 'function') {
                       (elementBelow as HTMLElement).click();
                     }
                   }

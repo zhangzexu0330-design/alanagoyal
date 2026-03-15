@@ -9,12 +9,8 @@ interface Device {
 }
 
 const devices: Device[] = [
-  { name: "Alana's MacBook Air", model: "This MacBook Air", type: "macbook" },
-  { name: "Alana's iPhone 16 Pro", model: "iPhone 16 Pro", type: "iphone" },
-  { name: "Alana's iPad", model: "iPad Air", type: "ipad" },
-  { name: "Family Room", model: "Apple TV", type: "apple-tv" },
-  { name: "Entertainment Room", model: "Apple TV", type: "apple-tv" },
-  { name: "Bedroom", model: "Apple TV", type: "apple-tv" },
+  { name: "泽旭的 MacBook Pro", model: "This MacBook Pro", type: "macbook" },
+  { name: "泽旭的 iPhone", model: "待补充", type: "iphone" },
 ];
 
 function DeviceIcon({ type }: { type: Device["type"] }) {
@@ -84,20 +80,22 @@ export function PersonalInfoPanel() {
       <div className="rounded-xl bg-muted/50 overflow-hidden">
         <div className="divide-y divide-border/50">
           <a
-            href="https://x.com/alanaagoyal"
-            target="_blank"
-            rel="noopener noreferrer"
+            href="mailto:zhangzexu0330@126.com"
             className="flex items-center justify-between px-4 py-3 hover:bg-muted/50 transition-colors cursor-pointer"
           >
-            <span className="text-xs">Name</span>
+            <span className="text-xs">姓名</span>
             <div className="flex items-center gap-1 text-muted-foreground">
-              <span className="text-xs">Alana Goyal</span>
+              <span className="text-xs">张泽旭</span>
               <ChevronRight className="w-4 h-4" />
             </div>
           </a>
           <div className="flex items-center justify-between px-4 py-3">
-            <span className="text-xs">Birthday</span>
-            <span className="text-xs text-muted-foreground">1/12/1996</span>
+            <span className="text-xs">邮箱</span>
+            <span className="text-xs text-muted-foreground">zhangzexu0330@126.com</span>
+          </div>
+          <div className="flex items-center justify-between px-4 py-3">
+            <span className="text-xs">微信</span>
+            <span className="text-xs text-muted-foreground">ZZX330925</span>
           </div>
         </div>
       </div>

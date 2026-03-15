@@ -11,7 +11,7 @@ import { getFileModifiedDate } from "@/lib/file-storage";
 import { CalendarDockIcon } from "@/components/apps/calendar/calendar-dock-icon";
 import { loadFinderPath, saveFinderPath } from "@/lib/sidebar-persistence";
 
-const USERNAME = "alanagoyal";
+const USERNAME = "zhangzexu";
 const HOME_DIR = `/Users/${USERNAME}`;
 const PROJECTS_DIR = `${HOME_DIR}/Projects`;
 

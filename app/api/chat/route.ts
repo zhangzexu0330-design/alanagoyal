@@ -2,8 +2,6 @@ import { OpenAI } from "openai";
 import type { ChatCompletionMessageParam } from "openai/resources/chat/completions";
 import { Recipient, Message, ReactionType } from "@/types/messages";
 import { initialContacts } from "@/data/messages/initial-contacts";
-import { wrapOpenAI } from "braintrust";
-import { initLogger } from "braintrust";
 import {
   formatConversation,
   formatConversationReversed,
@@ -11,25 +9,15 @@ import {
 } from "@/lib/messages/temporal-context";
 
 let client: OpenAI | null = null;
-let loggerInitialized = false;
 
 function getClient() {
   if (!client) {
-    client = wrapOpenAI(
-      new OpenAI({
-        baseURL: "https://api.braintrust.dev/v1/proxy",
-        apiKey: process.env.BRAINTRUST_API_KEY!,
-        timeout: 30000,
-        maxRetries: 3,
-      })
-    ) as unknown as OpenAI;
-  }
-  if (!loggerInitialized) {
-    initLogger({
-      projectName: "messages",
-      apiKey: process.env.BRAINTRUST_API_KEY,
+    client = new OpenAI({
+      baseURL: "https://api.moonshot.cn/v1",
+      apiKey: process.env.OPENAI_API_KEY!,
+      timeout: 30000,
+      maxRetries: 3,
     });
-    loggerInitialized = true;
   }
   return client;
 }
@@ -101,7 +89,7 @@ export async function POST(req: Request) {
       : buildGroupTools(participantNames, state.lastSpeaker);
 
     const response = await getClient().chat.completions.create({
-      model: "gpt-5.2",
+      model: "moonshot-v1-32k",
       messages: chatMessages,
       tool_choice: "required",
       tools,
@@ -152,17 +140,17 @@ function buildOneOnOnePrompt(
   const contact = initialContacts.find((p) => p.name === recipient.name);
   const persona = contact?.prompt || "Just be yourself and keep it casual.";
 
-  return `You are ${recipient.name} in a 1-on-1 text conversation with a human ("me").
+  return `你是 ${recipient.name}，正在与用户进行一对一短信对话。
 
 ${persona}
 
-CONVERSATION:
-${conversation || "(no messages yet)"}
+对话记录：
+${conversation || "（暂无消息）"}
 
-STATE:
-- Last human message: "${state.lastHumanMessage || "(none)"}" (${state.lastHumanTime || "n/a"})
+状态：
+- 用户最近一条消息："${state.lastHumanMessage || "（无）"}"（${state.lastHumanTime || "无"}）
 
-Respond naturally. Keep it SHORT like a real text message (1-2 sentences, not paragraphs).`;
+请用中文自然回复。像发短信一样简短（1-2句话，不要写长篇大论）。`;
 }
 
 function buildGroupPrompt(

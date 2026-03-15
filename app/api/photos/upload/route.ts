@@ -119,6 +119,9 @@ export async function POST(request: NextRequest) {
     } else if (image.startsWith("data:image/webp")) {
       contentType = "image/webp";
       extension = "webp";
+    } else if (image.startsWith("data:image/gif")) {
+      contentType = "image/gif";
+      extension = "gif";
     }
 
     // Generate filename if not provided

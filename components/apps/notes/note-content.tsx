@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useRef, useEffect } from "react";
+import { useCallback, useRef, useEffect, useState } from "react";
 import { Textarea } from "@/components/ui/textarea";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
@@ -11,6 +11,7 @@ import {
   insertImageMarkdown,
 } from "@/lib/notes/image-upload";
 import { toast } from "@/hooks/use-toast";
+import { Eye, Pencil } from "lucide-react";
 
 export default function NoteContent({
   note,
@@ -27,6 +28,8 @@ export default function NoteContent({
 }) {
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const clickRelativeYRef = useRef<number | null>(null);
+  // Public notes default to preview mode so images render instead of showing raw markdown
+  const [previewing, setPreviewing] = useState(note.public ?? false);
 
   const stopPropagation = useCallback((e: React.MouseEvent) => {
     e.stopPropagation();
@@ -44,47 +47,23 @@ export default function NoteContent({
     clickRelativeYRef.current = Math.max(0, Math.min(1, (e.clientY - rect.top) / rect.height));
   }, []);
 
-  // Auto-focus textarea when entering edit mode, cursor at end of clicked line
+  // Auto-focus textarea on mount when canEdit
   useEffect(() => {
-    if (isEditing && textareaRef.current) {
+    if (canEdit && textareaRef.current) {
       const textarea = textareaRef.current;
-      textarea.focus();
-
-      if (clickRelativeYRef.current !== null) {
-        const relativeY = clickRelativeYRef.current;
-        clickRelativeYRef.current = null;
-
-        const content = textarea.value;
-        const lines = content.split('\n');
-
-        // Estimate which line was clicked based on relative Y position
-        const estimatedLine = Math.floor(relativeY * lines.length);
-        const targetLine = Math.min(estimatedLine, lines.length - 1);
-
-        // Calculate character position at END of that line
-        let charPosition = 0;
-        for (let i = 0; i <= targetLine; i++) {
-          charPosition += lines[i].length;
-          if (i < targetLine) charPosition += 1; // +1 for newline
-        }
-
-        textarea.setSelectionRange(charPosition, charPosition);
-      } else {
-        // No click position (e.g., new note), place at end
-        const length = textarea.value.length;
-        textarea.setSelectionRange(length, length);
-      }
+      const length = textarea.value.length;
+      textarea.setSelectionRange(length, length);
     }
-  }, [isEditing]);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Auto-resize textarea to fit content
   useEffect(() => {
     const textarea = textareaRef.current;
-    if (textarea && isEditing) {
+    if (textarea && canEdit) {
       textarea.style.height = 'auto';
       textarea.style.height = `${textarea.scrollHeight}px`;
     }
-  }, [note.content, isEditing]);
+  }, [note.content, canEdit]);
 
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     saveNote({ content: e.target.value });
@@ -250,15 +229,42 @@ export default function NoteContent({
   }, [stopPropagation]);
 
   const renderImage = useCallback((props: React.ImgHTMLAttributes<HTMLImageElement>) => {
+    let alt = props.alt || "";
+    const style: React.CSSProperties = {};
+
+    // Parse |width or |widthxheight from alt text, e.g. ![图片|300](url) or ![图片|300x200](url)
+    const sizeMatch = alt.match(/\|(\d+)(?:x(\d+))?$/);
+    if (sizeMatch) {
+      alt = alt.replace(/\|(\d+)(?:x(\d+))?$/, "").trim();
+      style.maxWidth = `${sizeMatch[1]}px`;
+      if (sizeMatch[2]) style.height = `${sizeMatch[2]}px`;
+    } else {
+      style.maxWidth = "100%";
+    }
+
     return (
       // eslint-disable-next-line @next/next/no-img-element
-      <img {...props} alt={props.alt || "image"} className="w-full max-w-xl h-auto object-contain" />
+      <img {...props} alt={alt || "image"} style={style} className="h-auto object-contain" />
     );
   }, []);
 
   return (
-    <div className="px-2" onClick={isEditing ? stopPropagation : undefined}>
-      {(isEditing && canEdit) || (!note.content && canEdit) ? (
+    <div className="px-2" onClick={stopPropagation}>
+      {canEdit && (
+        <div className="flex justify-end mb-1">
+          <button
+            onClick={() => setPreviewing(p => !p)}
+            className="flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1 rounded"
+          >
+            {previewing ? (
+              <><Pencil className="w-3 h-3" />编辑</>
+            ) : (
+              <><Eye className="w-3 h-3" />预览</>
+            )}
+          </button>
+        </div>
+      )}
+      {canEdit && !previewing ? (
         <Textarea
           ref={textareaRef}
           id="note-content"
@@ -272,7 +278,7 @@ export default function NoteContent({
           onFocus={handleFocus}
         />
       ) : (
-        <div className="text-base md:text-sm" onClick={handleMarkdownClick}>
+        <div className="text-base md:text-sm">
           <ReactMarkdown
             className="markdown-body"
             remarkPlugins={[remarkGfm]}
@@ -282,7 +288,7 @@ export default function NoteContent({
               img: renderImage,
             }}
           >
-            {note.content || "Start writing..."}
+            {note.content || ""}
           </ReactMarkdown>
         </div>
       )}

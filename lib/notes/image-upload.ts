@@ -129,9 +129,15 @@ export async function uploadNoteImage(
       };
     }
 
-    // Compress image if over size limit
+    // Compress image if over size limit (skip compression for GIFs to preserve animation)
     let fileToUpload = file;
     if (file.size > MAX_FILE_SIZE) {
+      if (file.type === "image/gif") {
+        return {
+          success: false,
+          error: "GIF 文件过大（最大 5MB），请使用更小的 GIF。",
+        };
+      }
       try {
         fileToUpload = await compressImage(file, MAX_FILE_SIZE);
       } catch {

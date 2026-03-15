@@ -5,13 +5,14 @@ import { format } from "date-fns";
 import { Input } from "@/components/ui/input";
 import Picker from "@emoji-mart/react";
 import { useMobileDetect } from "./mobile-detector";
-import { Lock } from "lucide-react";
+import { Lock, Globe } from "lucide-react";
 import { Note } from "@/lib/notes/types";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from "./icons";
 import { getDisplayDateByCategory } from "@/lib/notes/note-utils";
+import { createClient } from "@/utils/supabase/client";
 
 export default function NoteHeader({
   note,
@@ -28,6 +29,18 @@ export default function NoteHeader({
   const pathname = usePathname();
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [formattedDate, setFormattedDate] = useState("");
+  const supabase = createClient();
+
+  const handleTogglePublic = async () => {
+    if (!canEdit) return;
+    const newPublic = !note.public;
+    await supabase.rpc("update_note_public", {
+      uuid_arg: note.id,
+      session_arg: note.session_id,
+      public_arg: newPublic,
+    });
+    saveNote({ public: newPublic });
+  };
 
   useEffect(() => {
     const displayDate = getDisplayDateByCategory(note.category, note.id);
@@ -67,16 +80,26 @@ export default function NoteHeader({
         <div className="flex justify-center items-center">
           <p className="text-muted-foreground text-xs">{formattedDate}</p>
           <div className="ml-2 h-6 flex items-center">
-            {!note.public && (
+            {canEdit ? (
+              <button onClick={handleTogglePublic}>
+                <Badge className="text-xs justify-center items-center cursor-pointer hover:opacity-70 transition-opacity">
+                  {note.public ? (
+                    <><Globe className="w-3 h-3 mr-1" />Public</>
+                  ) : (
+                    <><Lock className="w-3 h-3 mr-1" />Private</>
+                  )}
+                </Badge>
+              </button>
+            ) : !note.public ? (
               <Badge className="text-xs justify-center items-center">
                 <Lock className="w-3 h-3 mr-1" />
                 Private
               </Badge>
-            )}
+            ) : null}
           </div>
         </div>
         <div className="flex items-center relative">
-          {canEdit && !note.public && !isMobile ? (
+          {canEdit && !isMobile ? (
             <button
               onClick={() => setShowEmojiPicker(!showEmojiPicker)}
               className="cursor-pointer mr-2"
@@ -86,7 +109,7 @@ export default function NoteHeader({
           ) : (
             <span className="mr-2">{note.emoji}</span>
           )}
-          {note.public || !canEdit ? (
+          {!canEdit ? (
             <span className="text-2xl font-bold flex-grow py-2 leading-normal min-h-[50px]">
               {note.title}
             </span>
@@ -101,7 +124,7 @@ export default function NoteHeader({
             />
           )}
         </div>
-        {showEmojiPicker && !isMobile && !note.public && canEdit && (
+        {showEmojiPicker && !isMobile && canEdit && (
           <div className="absolute top-full left-0 z-10">
             <Picker
               onEmojiSelect={handleEmojiSelect}
