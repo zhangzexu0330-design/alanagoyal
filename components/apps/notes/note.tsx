@@ -104,7 +104,8 @@ export default function Note({ note: initialNote, onBack }: NoteProps) {
     [supabase, refreshSessionNotes, sessionId]
   );
 
-  const canEdit = sessionId === note.session_id;
+  // null session_id = public guestbook (anyone can edit); otherwise must match owner's session
+  const canEdit = !note.session_id || sessionId === note.session_id;
 
   const handleContentAreaClick = useCallback((e: React.MouseEvent) => {
     // Don't trigger edit if clicking interactive elements

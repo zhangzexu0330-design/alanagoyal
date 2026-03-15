@@ -47,7 +47,7 @@ export function groupNotesByCategory(notes: any[], pinnedNotes: Set<string>) {
 export function sortGroupedNotes(groupedNotes: any) {
   Object.keys(groupedNotes).forEach((category) => {
     groupedNotes[category].sort((a: any, b: any) =>
-      b.created_at.localeCompare(a.created_at)
+      a.created_at.localeCompare(b.created_at)
     );
   });
 }

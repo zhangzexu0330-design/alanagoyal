@@ -34,7 +34,7 @@ export function NotesApp({ isMobile = false, inShell = false, initialSlug }: Not
         .from("notes")
         .select("*")
         .eq("public", true)
-        .order("created_at", { ascending: false });
+        .order("created_at", { ascending: true });
 
       if (data) {
         setNotes(data);

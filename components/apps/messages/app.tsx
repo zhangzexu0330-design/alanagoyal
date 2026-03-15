@@ -66,8 +66,8 @@ export default function App({ isDesktop = false, inShell = false, focusModeActiv
   // Use window's dialog container when in desktop shell, otherwise use local ref
   const dialogContainer = windowFocus?.dialogContainerRef?.current ?? containerRef.current;
 
-  const STORAGE_KEY = "dialogueConversations";
-  const DELETED_INITIAL_KEY = "dialogueDeletedInitialConversations";
+  const STORAGE_KEY = "dialogueConversations_v2";
+  const DELETED_INITIAL_KEY = "dialogueDeletedInitialConversations_v2";
 
   // Memoized conversation selection method
   const selectConversation = useCallback(
